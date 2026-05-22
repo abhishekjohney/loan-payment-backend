@@ -1,0 +1,44 @@
+name: Deploy Node.js Backend to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-size: 18.x
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /var/www/payment-app-backend || exit
+          
+          # Pull latest code
+          git pull origin main
+          
+          # Install production dependencies
+          npm install --only=production
+          
+          # Run database migrations if any
+          npm run migrate
+          
+          # Restart the node process using PM2
+          pm2 restart payment-api || pm2 start server.js --name "payment-api"
