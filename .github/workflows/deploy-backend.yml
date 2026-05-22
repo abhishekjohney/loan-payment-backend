@@ -39,7 +39,7 @@ jobs:
             git pull origin main
             npm ci --production
             npm run migrate --if-present
-            pm2 restart loan-backend || pm2 start src/app.js --name loan-backend
+            pm2 restart loan-backend || pm2 start server.js --name loan-backend
             pm2 save
         if: success()
         continue-on-error: true
